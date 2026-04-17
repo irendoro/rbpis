@@ -1,0 +1,191 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:a5726191-7bcc-4ad4-9ddb-bbc9a5ba867e",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-04-17T18:07:15+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "manufacturer": {
+            "name": "Aqua Security Software Ltd."
+          },
+          "group": "aquasecurity",
+          "name": "trivy",
+          "version": "0.70.0"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "04e39d62-355e-42e5-bf09-11628041664f",
+      "type": "application",
+      "name": ".",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:SchemaVersion",
+          "value": "2"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "748aee46-6a5e-4952-b6bf-59be24b2276c",
+      "type": "application",
+      "name": "requirements.txt",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:Class",
+          "value": "lang-pkgs"
+        },
+        {
+          "name": "aquasecurity:trivy:Type",
+          "value": "pip"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:pypi/fastapi@0.115.0",
+      "type": "library",
+      "name": "fastapi",
+      "version": "0.115.0",
+      "purl": "pkg:pypi/fastapi@0.115.0",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:PkgType",
+          "value": "pip"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:pypi/psycopg2-binary@2.9.9",
+      "type": "library",
+      "name": "psycopg2-binary",
+      "version": "2.9.9",
+      "purl": "pkg:pypi/psycopg2-binary@2.9.9",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:PkgType",
+          "value": "pip"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:pypi/pydantic@2.9.2",
+      "type": "library",
+      "name": "pydantic",
+      "version": "2.9.2",
+      "purl": "pkg:pypi/pydantic@2.9.2",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:PkgType",
+          "value": "pip"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:pypi/python-jose@3.3.0",
+      "type": "library",
+      "name": "python-jose",
+      "version": "3.3.0",
+      "purl": "pkg:pypi/python-jose@3.3.0",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:PkgType",
+          "value": "pip"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:pypi/python-multipart@0.0.12",
+      "type": "library",
+      "name": "python-multipart",
+      "version": "0.0.12",
+      "purl": "pkg:pypi/python-multipart@0.0.12",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:PkgType",
+          "value": "pip"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:pypi/sqlalchemy@2.0.35",
+      "type": "library",
+      "name": "sqlalchemy",
+      "version": "2.0.35",
+      "purl": "pkg:pypi/sqlalchemy@2.0.35",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:PkgType",
+          "value": "pip"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:pypi/uvicorn@0.30.6",
+      "type": "library",
+      "name": "uvicorn",
+      "version": "0.30.6",
+      "purl": "pkg:pypi/uvicorn@0.30.6",
+      "properties": [
+        {
+          "name": "aquasecurity:trivy:PkgType",
+          "value": "pip"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "04e39d62-355e-42e5-bf09-11628041664f",
+      "dependsOn": [
+        "748aee46-6a5e-4952-b6bf-59be24b2276c"
+      ]
+    },
+    {
+      "ref": "748aee46-6a5e-4952-b6bf-59be24b2276c",
+      "dependsOn": [
+        "pkg:pypi/fastapi@0.115.0",
+        "pkg:pypi/psycopg2-binary@2.9.9",
+        "pkg:pypi/pydantic@2.9.2",
+        "pkg:pypi/python-jose@3.3.0",
+        "pkg:pypi/python-multipart@0.0.12",
+        "pkg:pypi/sqlalchemy@2.0.35",
+        "pkg:pypi/uvicorn@0.30.6"
+      ]
+    },
+    {
+      "ref": "pkg:pypi/fastapi@0.115.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/psycopg2-binary@2.9.9",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/pydantic@2.9.2",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/python-jose@3.3.0",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/python-multipart@0.0.12",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/sqlalchemy@2.0.35",
+      "dependsOn": []
+    },
+    {
+      "ref": "pkg:pypi/uvicorn@0.30.6",
+      "dependsOn": []
+    }
+  ],
+  "vulnerabilities": []
+}

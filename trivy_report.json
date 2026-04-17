@@ -1,0 +1,295 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.70.0"
+  },
+  "ReportID": "019d9cca-f17d-7881-8b4f-8cba2a26ae3d",
+  "CreatedAt": "2026-04-17T21:53:59.037560316+03:00",
+  "ArtifactName": ".",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "requirements.txt",
+      "Class": "lang-pkgs",
+      "Type": "pip",
+      "Packages": [
+        {
+          "Name": "fastapi",
+          "Identifier": {
+            "PURL": "pkg:pypi/fastapi@0.115.0",
+            "UID": "d982fe3ed07a3403"
+          },
+          "Version": "0.115.0",
+          "Locations": [
+            {
+              "StartLine": 1,
+              "EndLine": 1
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "psycopg2-binary",
+          "Identifier": {
+            "PURL": "pkg:pypi/psycopg2-binary@2.9.9",
+            "UID": "e780a51702bd0c57"
+          },
+          "Version": "2.9.9",
+          "Locations": [
+            {
+              "StartLine": 4,
+              "EndLine": 4
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "pydantic",
+          "Identifier": {
+            "PURL": "pkg:pypi/pydantic@2.9.2",
+            "UID": "8c15ede8a44e333a"
+          },
+          "Version": "2.9.2",
+          "Locations": [
+            {
+              "StartLine": 7,
+              "EndLine": 7
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "python-jose",
+          "Identifier": {
+            "PURL": "pkg:pypi/python-jose@3.3.0",
+            "UID": "9bf7d331eb8367a2"
+          },
+          "Version": "3.3.0",
+          "Locations": [
+            {
+              "StartLine": 5,
+              "EndLine": 5
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "python-multipart",
+          "Identifier": {
+            "PURL": "pkg:pypi/python-multipart@0.0.12",
+            "UID": "fe855f99be837a1e"
+          },
+          "Version": "0.0.12",
+          "Locations": [
+            {
+              "StartLine": 6,
+              "EndLine": 6
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "sqlalchemy",
+          "Identifier": {
+            "PURL": "pkg:pypi/sqlalchemy@2.0.35",
+            "UID": "d73d2509ca3113f7"
+          },
+          "Version": "2.0.35",
+          "Locations": [
+            {
+              "StartLine": 3,
+              "EndLine": 3
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "uvicorn",
+          "Identifier": {
+            "PURL": "pkg:pypi/uvicorn@0.30.6",
+            "UID": "d124ed6008fdd096"
+          },
+          "Version": "0.30.6",
+          "Locations": [
+            {
+              "StartLine": 2,
+              "EndLine": 2
+            }
+          ],
+          "AnalyzedBy": "pip"
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2024-33663",
+          "VendorIDs": [
+            "GHSA-6c5p-j8vq-pqhj"
+          ],
+          "PkgName": "python-jose",
+          "PkgIdentifier": {
+            "PURL": "pkg:pypi/python-jose@3.3.0",
+            "UID": "9bf7d331eb8367a2"
+          },
+          "InstalledVersion": "3.3.0",
+          "FixedVersion": "3.4.0",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-33663",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory pip",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Apip"
+          },
+          "Fingerprint": "sha256:4fdba015532cd873229f8734f1cf4b802535f59905bbfdcc9b9170476cc15b6d",
+          "Title": "python-jose: algorithm confusion with OpenSSH ECDSA keys and other key formats",
+          "Description": "python-jose through 3.3.0 has algorithm confusion with OpenSSH ECDSA keys and other key formats. This is similar to CVE-2022-29217.",
+          "Severity": "CRITICAL",
+          "CweIDs": [
+            "CWE-327"
+          ],
+          "VendorSeverity": {
+            "ghsa": 4,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+              "V3Score": 7.4,
+              "V40Score": 9.3
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2024-33663",
+            "https://github.com/mpdavis/python-jose",
+            "https://github.com/mpdavis/python-jose/issues/346",
+            "https://github.com/pypa/advisory-database/tree/main/vulns/python-jose/PYSEC-2024-232.yaml",
+            "https://nvd.nist.gov/vuln/detail/CVE-2024-33663",
+            "https://www.cve.org/CVERecord?id=CVE-2024-33663",
+            "https://www.vicarius.io/vsociety/posts/algorithm-confusion-in-python-jose-cve-2024-33663"
+          ],
+          "PublishedDate": "2024-04-26T00:15:09.01Z",
+          "LastModifiedDate": "2025-09-02T18:37:53.477Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2024-53981",
+          "VendorIDs": [
+            "GHSA-59g5-xgcq-4qw3"
+          ],
+          "PkgName": "python-multipart",
+          "PkgIdentifier": {
+            "PURL": "pkg:pypi/python-multipart@0.0.12",
+            "UID": "fe855f99be837a1e"
+          },
+          "InstalledVersion": "0.0.12",
+          "FixedVersion": "0.0.18",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-53981",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory pip",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Apip"
+          },
+          "Fingerprint": "sha256:9618bad598ad7258b9cfafc0a4f6756b94ef855329ccb48ae3da5b89eb0a99bf",
+          "Title": "python-multipart: python-multipart has a DoS via deformation `multipart/form-data` boundary",
+          "Description": "python-multipart is a streaming multipart parser for Python. When parsing form data, python-multipart skips line breaks (CR \\r or LF \\n) in front of the first boundary and any tailing bytes after the last boundary. This happens one byte at a time and emits a log event each time, which may cause excessive logging for certain inputs. An attacker could abuse this by sending a malicious request with lots of data before the first or after the last boundary, causing high CPU load and stalling the processing thread for a significant amount of time. In case of ASGI application, this could stall the event loop and prevent other requests from being processed, resulting in a denial of service (DoS). This vulnerability is fixed in 0.0.18.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-770"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "redhat": 3,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+              "V3Score": 7.5,
+              "V40Score": 8.7
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2024-53981",
+            "https://github.com/Kludex/python-multipart",
+            "https://github.com/Kludex/python-multipart/commit/c4fe4d3cebc08c660e57dd709af1ffa7059b3177",
+            "https://github.com/Kludex/python-multipart/commit/c4fe4d3cebc08c660e57dd709af1ffa7059b3177 (0.0.19)",
+            "https://github.com/Kludex/python-multipart/security/advisories/GHSA-59g5-xgcq-4qw3",
+            "https://nvd.nist.gov/vuln/detail/CVE-2024-53981",
+            "https://ubuntu.com/security/notices/USN-8027-1",
+            "https://www.cve.org/CVERecord?id=CVE-2024-53981"
+          ],
+          "PublishedDate": "2024-12-02T16:15:14.457Z",
+          "LastModifiedDate": "2026-04-15T00:35:42.02Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-24486",
+          "VendorIDs": [
+            "GHSA-wp53-j4wj-2cfg"
+          ],
+          "PkgName": "python-multipart",
+          "PkgIdentifier": {
+            "PURL": "pkg:pypi/python-multipart@0.0.12",
+            "UID": "fe855f99be837a1e"
+          },
+          "InstalledVersion": "0.0.12",
+          "FixedVersion": "0.0.22",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-24486",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory pip",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Apip"
+          },
+          "Fingerprint": "sha256:7aa25e44fb98262745de16cd554faead9be7f89d98408429180a2b22261635b0",
+          "Title": "python-multipart: Python-Multipart: Arbitrary file write via path traversal vulnerability",
+          "Description": "Python-Multipart is a streaming multipart parser for Python. Prior to version 0.0.22, a Path Traversal vulnerability exists when using non-default configuration options `UPLOAD_DIR` and `UPLOAD_KEEP_FILENAME=True`. An attacker can write uploaded files to arbitrary locations on the filesystem by crafting a malicious filename. Users should upgrade to version 0.0.22 to receive a patch or, as a workaround, avoid using `UPLOAD_KEEP_FILENAME=True` in project configurations.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-22"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 3,
+            "redhat": 3,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:H/A:L",
+              "V3Score": 8.6
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+              "V3Score": 7.5
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:H/A:L",
+              "V3Score": 8.6
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-24486",
+            "https://github.com/Kludex/python-multipart",
+            "https://github.com/Kludex/python-multipart/commit/9433f4bbc9652bdde82bbe380984e32f8cfc89c4",
+            "https://github.com/Kludex/python-multipart/commit/9433f4bbc9652bdde82bbe380984e32f8cfc89c4 (0.0.22)",
+            "https://github.com/Kludex/python-multipart/releases/tag/0.0.22",
+            "https://github.com/Kludex/python-multipart/security/advisories/GHSA-wp53-j4wj-2cfg",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-24486",
+            "https://ubuntu.com/security/notices/USN-8027-1",
+            "https://www.cve.org/CVERecord?id=CVE-2026-24486"
+          ],
+          "PublishedDate": "2026-01-27T01:16:02.303Z",
+          "LastModifiedDate": "2026-02-17T20:44:50.21Z"
+        }
+      ]
+    }
+  ]
+}

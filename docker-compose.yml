@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: skud
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: skud_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skud -d skud_db"]
+      interval: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://skud:password@db/skud_db
+      SECRET_KEY: ${SECRET_KEY:-change-me-before-deploy}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pg_data:

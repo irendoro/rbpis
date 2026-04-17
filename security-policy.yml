@@ -1,0 +1,35 @@
+version: "1.0"
+project: "Менеджер корпоративных пропусков"
+date: "2026-04-17"
+
+max_cvss_score: 7.0
+auto_block_severities:
+  - "CRITICAL"
+
+warn_severities:
+  - "HIGH"
+
+banned_components:
+  - "python-jose@<3.4.0"      # CVE-2024-33663 (CRITICAL)
+  - "python-multipart@<0.0.22" # CVE-2024-53981, CVE-2026-24486
+
+banned_licenses:
+  - "GPL-3.0"
+  - "AGPL-3.0"
+
+crypto_requirements:
+  banned_algorithms:
+    - "MD5"
+    - "SHA1"
+    - "DES"
+    - "RC4"
+  min_hash: "SHA256"
+  min_cipher: "AES-128-GCM"
+
+remediation_days:
+  CRITICAL: 1      
+  HIGH: 7          
+  MEDIUM: 30       
+  LOW: 90          
+
+vex_required: true  
