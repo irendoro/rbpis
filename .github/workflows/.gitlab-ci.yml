@@ -17,9 +17,13 @@ jobs:
       
       # ========== SCA: Trivy ==========
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.2.2
-        with:
-          version: v0.45.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
       
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -67,7 +71,9 @@ jobs:
       # ========== SAST: Bandit ==========
       - name: SAST - Install Bandit
         run: |
-          pip install bandit
+          sudo apt-get update
+          sudo apt-get install -y python3-pip
+          pip3 install bandit
       
       - name: SAST - Run Bandit
         id: sast
@@ -82,7 +88,7 @@ jobs:
         id: bandit-gate
         continue-on-error: true
         run: |
-          python security_gate.py --bandit reports/bandit-report.json --threshold high
+          python3 security_gate.py --bandit reports/bandit-report.json --threshold high
           echo "bandit_exit=$?" >> $GITHUB_OUTPUT
       
       # ========== Save artifacts ==========
