@@ -18,11 +18,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: SAST - Install Bandit
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install bandit
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install Bandit
+        run: pip install bandit
       
       - name: SAST - Run Bandit
         run: |
@@ -33,7 +35,7 @@ jobs:
       - name: Upload SAST reports
         uses: actions/upload-artifact@v4
         with:
-          name: sast-reports
+          name: bandit-report
           path: reports/bandit-report.json
           retention-days: 7
 
@@ -111,48 +113,130 @@ jobs:
   # ============================================
   # СТАДИЯ 3: DAST (Dynamic Application Security Testing)
   # ============================================
-  # В вашем исходном пайплайне DAST отсутствует
-  dast:
+  build:
     runs-on: ubuntu-latest
-    needs: [sast, sca]
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: DAST placeholder
+
+      - name: Build Docker image
+        run: docker build -t rbpis-api .
+
+      - name: Test container
         run: |
-          echo "DAST stage - not implemented in original pipeline"
+          docker run -d --name test-api rbpis-api
+          docker ps | grep test-api
+          docker stop test-api
+          docker rm test-api
+
+  dast:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start application
+        run: |
+          docker compose up -d --build
+          sleep 10
+
+      - name: Check if app is running
+        run: |
+          curl --retry 5 --retry-delay 2 --retry-connrefused http://localhost:8000/search-users?name=test
+
+      - name: Create ZAP reports directory
+        run: |
+          mkdir -p zap-reports
+          sudo chmod -R 777 zap-reports
+
+      - name: Passive Scan with ZAP
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            -v $(pwd)/zap-reports:/zap/wrk \
+            --network="host" \
+            zaproxy/zap-stable \
+            zap-full-scan.py \
+            -t "http://localhost:8000/search-users?name=test" \
+            -r zap_passive_report.html
+
+      - name: Active Scan with ZAP
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            -v $(pwd)/zap-reports:/zap/wrk \
+            --network="host" \
+            zaproxy/zap-stable \
+            zap-api-scan.py \
+            -t "http://localhost:8000/openapi.json" \
+            -f openapi \
+            -r zap_active_report.html
+
+      - name: Upload ZAP passive report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-passive-report
+          path: zap-reports/zap_passive_report.html
+
+      - name: Upload ZAP active report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-active-report
+          path: zap-reports/zap_active_report.html
+
+      - name: Stop application
+        if: always()
+        run: docker compose down
 
   # ============================================
   # СТАДИЯ 4: Security Gate
   # ============================================
-  security_gate:
+  security-gate:
     runs-on: ubuntu-latest
-    needs: [sast, sca]
+    needs: [sast, sca, dast]
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Download SAST reports
+      - name: Download Bandit report
         uses: actions/download-artifact@v4
         with:
-          name: sast-reports
-          path: ./sast-reports
+          name: bandit-report
+          path: .
       
       - name: Download SCA reports
         uses: actions/download-artifact@v4
         with:
           name: sca-reports
-          path: ./sca-reports
+          path: .
+      
+      - name: Download ZAP passive report
+        uses: actions/download-artifact@v4
+        with:
+          name: zap-passive-report
+          path: .
+      
+      - name: Download ZAP active report
+        uses: actions/download-artifact@v4
+        with:
+          name: zap-active-report
+          path: .
       
       - name: Security Gate - Process Bandit results
         id: bandit-gate
         continue-on-error: true
         run: |
-          python3 security_gate.py --bandit sast-reports/bandit-report.json --threshold high
-          echo "bandit_exit=$?" >> $GITHUB_OUTPUT
+          if [ -f bandit-report.json ]; then
+            python3 security_gate.py --bandit bandit-report.json --threshold high
+            echo "bandit_exit=$?" >> $GITHUB_OUTPUT
+          else
+            echo "No Bandit report found"
+            echo "bandit_exit=1" >> $GITHUB_OUTPUT
+          fi
       
       - name: Security Gate - FINAL
         if: steps.sca.outcome == 'failure' || steps.banned.outcome == 'failure' || steps.bandit-gate.outcome == 'failure'
@@ -175,6 +259,7 @@ jobs:
           echo "  1. Update python-jose to >=3.4.0"
           echo "  2. Update python-multipart to >=0.0.22"
           echo "  3. Fix Bandit findings"
+          echo "  4. Review ZAP DAST reports"
           exit 1
       
       - name: Security Gate - PASS
@@ -186,3 +271,19 @@ jobs:
           echo "SCA: No CRITICAL vulnerabilities"
           echo "SCA: No banned components"
           echo "SAST: No HIGH issues"
+          echo "DAST: Scans completed (review reports)"
+  
+  # ============================================
+  # СТАДИЯ 5: Deploy (опционально)
+  # ============================================
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build, security-gate]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy with docker-compose
+        run: |
+          docker compose up -d --build
