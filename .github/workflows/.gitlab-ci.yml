@@ -202,76 +202,70 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
       - name: Download Bandit report
         uses: actions/download-artifact@v4
         with:
           name: bandit-report
-          path: .
+          path: reports/
       
       - name: Download SCA reports
         uses: actions/download-artifact@v4
         with:
           name: sca-reports
-          path: .
+          path: reports/
       
       - name: Download ZAP passive report
         uses: actions/download-artifact@v4
         with:
           name: zap-passive-report
-          path: .
+          path: reports/
       
       - name: Download ZAP active report
         uses: actions/download-artifact@v4
         with:
           name: zap-active-report
-          path: .
+          path: reports/
       
-      - name: Security Gate - Process Bandit results
-        id: bandit-gate
+      - name: Run Security Gate
+        id: security-gate
         continue-on-error: true
         run: |
-          if [ -f bandit-report.json ]; then
-            python3 security_gate.py --bandit bandit-report.json --threshold high
-            echo "bandit_exit=$?" >> $GITHUB_OUTPUT
-          else
-            echo "No Bandit report found"
-            echo "bandit_exit=1" >> $GITHUB_OUTPUT
-          fi
+          python3 security_gate.py \
+            --bandit reports/bandit-report.json \
+            --sca reports/trivy_report.json \
+            --zap-passive reports/zap_passive_report.html \
+            --zap-active reports/zap_active_report.html \
+            --threshold high
       
-      - name: Security Gate - FINAL
-        if: steps.sca.outcome == 'failure' || steps.banned.outcome == 'failure' || steps.bandit-gate.outcome == 'failure'
+      - name: Security Gate - FINAL DECISION
+        if: steps.security-gate.outcome == 'failure'
         run: |
           echo "=========================================="
           echo "SECURITY GATE: BLOCKED"
           echo "=========================================="
-          echo "Reasons:"
-          if [ "${{ steps.sca.outcome }}" = "failure" ]; then
-            echo "  - CRITICAL vulnerabilities found in dependencies"
-          fi
-          if [ "${{ steps.banned.outcome }}" = "failure" ]; then
-            echo "  - Banned components detected"
-          fi
-          if [ "${{ steps.bandit-gate.outcome }}" = "failure" ]; then
-            echo "  - SAST issues found (Bandit)"
-          fi
+          echo "The pipeline has been blocked due to security issues."
+          echo "Please check the security gate output above for details."
           echo ""
-          echo "Actions to fix:"
+          echo "Common fixes:"
           echo "  1. Update python-jose to >=3.4.0"
           echo "  2. Update python-multipart to >=0.0.22"
-          echo "  3. Fix Bandit findings"
-          echo "  4. Review ZAP DAST reports"
+          echo "  3. Fix Bandit findings in your code"
+          echo "  4. Review ZAP DAST reports in artifacts"
+          echo "  5. Update vulnerable dependencies"
           exit 1
       
-      - name: Security Gate - PASS
-        if: steps.sca.outcome == 'success' && steps.banned.outcome == 'success' && steps.bandit-gate.outcome == 'success'
+      - name: Security Gate - PASSED
+        if: steps.security-gate.outcome == 'success'
         run: |
           echo "=========================================="
-          echo "SECURITY GATE: PASSED"
+          echo "SECURITY GATE: PASSED ✅"
           echo "=========================================="
-          echo "SCA: No CRITICAL vulnerabilities"
-          echo "SCA: No banned components"
-          echo "SAST: No HIGH issues"
-          echo "DAST: Scans completed (review reports)"
+          echo "All security checks have passed successfully!"
   
   # ============================================
   # СТАДИЯ 5: Deploy (опционально)
@@ -279,7 +273,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [build, security-gate]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && needs.security-gate.result == 'success'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
