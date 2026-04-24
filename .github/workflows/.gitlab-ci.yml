@@ -9,7 +9,7 @@ on:
 
 jobs:
   # ============================================
-  # СТАДИЯ 1: SAST (Static Application Security Testing)
+  # СТАДИЯ 1: SAST
   # ============================================
   sast:
     runs-on: ubuntu-latest
@@ -40,7 +40,7 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # СТАДИЯ 2: SCA (Software Composition Analysis)
+  # СТАДИЯ 2: SCA
   # ============================================
   sca:
     runs-on: ubuntu-latest
@@ -111,10 +111,11 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # СТАДИЯ 3: DAST (Dynamic Application Security Testing)
+  # СТАДИЯ 3: DAST
   # ============================================
-  build:
+  dast:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -129,14 +130,7 @@ jobs:
           docker stop test-api
           docker rm test-api
 
-  dast:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Start application
+      - name: Start application with docker-compose
         run: |
           docker compose up -d --build
           sleep 10
@@ -268,11 +262,11 @@ jobs:
           echo "All security checks have passed successfully!"
   
   # ============================================
-  # СТАДИЯ 5: Deploy (опционально)
+  # СТАДИЯ 5: Deploy
   # ============================================
   deploy:
     runs-on: ubuntu-latest
-    needs: [build, security-gate]
+    needs: [security-gate]
     if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && needs.security-gate.result == 'success'
     steps:
       - name: Checkout code
