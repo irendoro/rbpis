@@ -11,7 +11,7 @@ SEVERITY_ORDER = {
     "CRITICAL": 4,
 }
 
-# Бан-лист компонентов (package_name: [min_version, reason])
+# Бан-лист компонентов (package_name: {min_version, reason})
 BANNED_COMPONENTS = {
     "python-jose": {
         "min_version": "3.4.0",
@@ -29,20 +29,31 @@ def load_bandit_findings(path: Path) -> list[dict]:
         print(f"[WARN] Bandit report not found: {path}")
         return []
     
-    data = json.loads(path.read_text(encoding="utf-8"))
-    findings = []
-    for item in data.get("results", []):
-        severity = item.get("issue_severity", "LOW").upper()
-        findings.append({
-            "tool": "bandit",
-            "severity": severity,
-            "severity_level": SEVERITY_ORDER.get(severity, 0),
-            "test_id": item.get("test_id", "UNKNOWN"),
-            "file": item.get("filename", "unknown"),
-            "line": item.get("line_number", "?"),
-            "message": item.get("issue_text", ""),
-        })
-    return findings
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        findings = []
+        for item in data.get("results", []):
+            severity = item.get("issue_severity", "LOW").upper()
+            findings.append({
+                "tool": "bandit",
+                "severity": severity,
+                "severity_level": SEVERITY_ORDER.get(severity, 0),
+                "test_id": item.get("test_id", "UNKNOWN"),
+                "file": item.get("filename", "unknown"),
+                "line": item.get("line_number", "?"),
+                "message": item.get("issue_text", ""),
+            })
+        
+        total_issues = len(findings)
+        if total_issues == 0:
+            print(f"[INFO] Bandit: No issues found ✅")
+        else:
+            print(f"[INFO] Bandit: Found {total_issues} issues total")
+        
+        return findings
+    except Exception as e:
+        print(f"[ERROR] Failed to parse Bandit report: {e}")
+        return []
 
 
 def load_zap_findings_from_html(path: Path) -> list[dict]:
@@ -51,105 +62,113 @@ def load_zap_findings_from_html(path: Path) -> list[dict]:
         print(f"[WARN] ZAP report not found: {path}")
         return []
     
-    content = path.read_text(encoding="utf-8")
-    findings = []
-    
-    # Ищем HIGH и CRITICAL уязвимости в HTML таблице ZAP
-    pattern = r'<tr[^>]*>\s*<td[^>]*>(HIGH|CRITICAL)[^<]*<\/td>\s*<td[^>]*>([^<]+)<\/td>'
-    matches = re.findall(pattern, content, re.IGNORECASE)
-    
-    for severity, name in matches:
-        severity_upper = severity.upper()
-        findings.append({
-            "tool": "zap",
-            "severity": severity_upper,
-            "severity_level": SEVERITY_ORDER.get(severity_upper, 0),
-            "test_id": "ZAP_ALERT",
-            "file": path.name,
-            "line": "?",
-            "message": name.strip(),
-        })
-    
-    print(f"[INFO] Found {len(findings)} HIGH/CRITICAL issues in {path.name}")
-    return findings
+    try:
+        content = path.read_text(encoding="utf-8")
+        findings = []
+        
+        # Ищем HIGH и CRITICAL уязвимости в HTML таблице ZAP
+        pattern = r'<tr[^>]*>\s*<td[^>]*>(HIGH|CRITICAL)[^<]*<\/td>\s*<td[^>]*>([^<]+)<\/td>'
+        matches = re.findall(pattern, content, re.IGNORECASE)
+        
+        for severity, name in matches:
+            severity_upper = severity.upper()
+            findings.append({
+                "tool": "zap",
+                "severity": severity_upper,
+                "severity_level": SEVERITY_ORDER.get(severity_upper, 0),
+                "test_id": "ZAP_ALERT",
+                "file": path.name,
+                "line": "?",
+                "message": name.strip(),
+            })
+        
+        if len(findings) == 0:
+            print(f"[INFO] ZAP ({path.name}): No HIGH/CRITICAL issues found ✅")
+        else:
+            print(f"[INFO] ZAP ({path.name}): Found {len(findings)} HIGH/CRITICAL issues")
+        
+        return findings
+    except Exception as e:
+        print(f"[ERROR] Failed to parse ZAP report {path.name}: {e}")
+        return []
 
 
 def load_sca_findings(path: Path) -> tuple[list[dict], list[dict]]:
-    """
-    Загружает SCA отчёт Trivy и возвращает:
-    - vulnerability_findings: критические и высокие уязвимости
-    - banned_findings: бан-лист компонентов с недопустимыми версиями
-    """
     if not path.exists():
         print(f"[WARN] SCA report not found: {path}")
         return [], []
     
-    data = json.loads(path.read_text(encoding="utf-8"))
-    vulnerability_findings = []
-    banned_findings = []
-    
-    # Парсим уязвимости из результатов
-    for result in data.get("Results", []):
-        vulnerabilities = result.get("Vulnerabilities", [])
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        vulnerability_findings = []
+        banned_findings = []
         
-        for vuln in vulnerabilities:
-            severity = vuln.get("Severity", "LOW").upper()
-            severity_level = SEVERITY_ORDER.get(severity, 0)
+        for result in data.get("Results", []):
+            vulnerabilities = result.get("Vulnerabilities", [])
             
-            # Берем только HIGH и CRITICAL для блокировки
-            if severity_level >= SEVERITY_ORDER["HIGH"]:
-                vulnerability_findings.append({
-                    "tool": "trivy",
-                    "severity": severity,
-                    "severity_level": severity_level,
-                    "test_id": vuln.get("VulnerabilityID", "UNKNOWN"),
-                    "file": f"{result.get('Target', 'unknown')} ({vuln.get('PkgName', 'unknown')})",
-                    "line": f"version: {vuln.get('InstalledVersion', '?')}",
-                    "message": (
-                        f"{vuln.get('Title', vuln.get('Description', 'No description'))} "
-                        f"[Fixed in: {vuln.get('FixedVersion', 'N/A')}]"
-                    ),
-                })
-        
-        # Парсим пакеты для проверки бан-листа
-        packages = result.get("Packages", [])
-        for pkg in packages:
-            pkg_name = pkg.get("Name", "")
-            pkg_version = pkg.get("Version", "")
-            
-            if pkg_name in BANNED_COMPONENTS:
-                banned_info = BANNED_COMPONENTS[pkg_name]
-                min_version = banned_info["min_version"]
+            for vuln in vulnerabilities:
+                severity = vuln.get("Severity", "LOW").upper()
+                severity_level = SEVERITY_ORDER.get(severity, 0)
                 
-                # Проверка версии
-                if not is_version_compatible(pkg_version, min_version):
-                    banned_findings.append({
-                        "tool": "trivy-banned",
-                        "severity": "CRITICAL",
-                        "severity_level": SEVERITY_ORDER["CRITICAL"],
-                        "test_id": "BANNED_COMPONENT",
-                        "file": result.get("Target", "unknown"),
-                        "line": f"{pkg_name} {pkg_version}",
+                # Берем только HIGH и CRITICAL для блокировки
+                if severity_level >= SEVERITY_ORDER["HIGH"]:
+                    vulnerability_findings.append({
+                        "tool": "trivy",
+                        "severity": severity,
+                        "severity_level": severity_level,
+                        "test_id": vuln.get("VulnerabilityID", "UNKNOWN"),
+                        "file": f"{result.get('Target', 'unknown')} ({vuln.get('PkgName', 'unknown')})",
+                        "line": f"version: {vuln.get('InstalledVersion', '?')}",
                         "message": (
-                            f"Banned component: {pkg_name} {pkg_version} "
-                            f"(required >= {min_version}). {banned_info['reason']}"
+                            f"{vuln.get('Title', vuln.get('Description', 'No description'))} "
+                            f"[Fixed in: {vuln.get('FixedVersion', 'N/A')}]"
                         ),
                     })
-    
-    print(f"[INFO] SCA: Found {len(vulnerability_findings)} HIGH/CRITICAL vulnerabilities")
-    print(f"[INFO] SCA: Found {len(banned_findings)} banned components")
-    
-    return vulnerability_findings, banned_findings
+            
+            packages = result.get("Packages", [])
+            for pkg in packages:
+                pkg_name = pkg.get("Name", "")
+                pkg_version = pkg.get("Version", "")
+                
+                if pkg_name in BANNED_COMPONENTS:
+                    banned_info = BANNED_COMPONENTS[pkg_name]
+                    min_version = banned_info["min_version"]
+                    
+                    if not is_version_compatible(pkg_version, min_version):
+                        banned_findings.append({
+                            "tool": "trivy-banned",
+                            "severity": "CRITICAL",
+                            "severity_level": SEVERITY_ORDER["CRITICAL"],
+                            "test_id": "BANNED_COMPONENT",
+                            "file": result.get("Target", "unknown"),
+                            "line": f"{pkg_name} {pkg_version}",
+                            "message": (
+                                f"Banned component: {pkg_name} {pkg_version} "
+                                f"(required >= {min_version}). {banned_info['reason']}"
+                            ),
+                        })
+        
+        if len(vulnerability_findings) == 0:
+            print(f"[INFO] SCA: No HIGH/CRITICAL vulnerabilities found ✅")
+        else:
+            print(f"[INFO] SCA: Found {len(vulnerability_findings)} HIGH/CRITICAL vulnerabilities")
+        
+        if len(banned_findings) == 0:
+            print(f"[INFO] SCA: No banned components found ✅")
+        else:
+            print(f"[INFO] SCA: Found {len(banned_findings)} banned components")
+        
+        return vulnerability_findings, banned_findings
+    except Exception as e:
+        print(f"[ERROR] Failed to parse SCA report: {e}")
+        return [], []
 
 
 def is_version_compatible(current_version: str, min_version: str) -> bool:
-    """Сравнивает версии, возвращает True если current >= min"""
     def normalize(v):
-        # Удаляем префиксы v, V и суффиксы типа -rc1
         v = re.sub(r'^[vV]', '', v)
         v = re.sub(r'[-_].*$', '', v)
         parts = v.split('.')
-        # Дополняем до 3 частей нулями
         while len(parts) < 3:
             parts.append('0')
         return tuple(int(p) for p in parts[:3] if p.isdigit())
@@ -159,7 +178,6 @@ def is_version_compatible(current_version: str, min_version: str) -> bool:
         min_norm = normalize(min_version)
         return current_norm >= min_norm
     except (ValueError, AttributeError):
-        # Если не удалось распарсить, считаем несовместимой
         return False
 
 
@@ -181,9 +199,15 @@ def main() -> int:
     all_findings = []
     banned_findings = []
 
+    print("\n" + "="*60)
+    print("SECURITY SCAN RESULTS")
+    print("="*60 + "\n")
+
     # Загружаем Bandit
     if args.bandit:
         all_findings.extend(load_bandit_findings(Path(args.bandit)))
+    else:
+        print("[INFO] Bandit: Skipped (no report provided)")
 
     # Загружаем ZAP отчёты
     if args.zap_passive:
@@ -196,6 +220,8 @@ def main() -> int:
         vuln_findings, banned = load_sca_findings(Path(args.sca))
         all_findings.extend(vuln_findings)
         banned_findings.extend(banned)
+    else:
+        print("[INFO] SCA: Skipped (no report provided)")
 
     # Фильтруем уязвимости выше порога
     blocked = [f for f in all_findings if f["severity_level"] >= threshold]
@@ -254,7 +280,7 @@ def main() -> int:
         print("Security Gate decision: BLOCK ❌")
         print(f"{'='*60}")
         
-        # Выводим рекомендации по фикса
+        # Выводим рекомендации по фиксу
         print("\n📋 RECOMMENDATIONS:")
         if banned_issues:
             print("  • Update banned components to secure versions:")
